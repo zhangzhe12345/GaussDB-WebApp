@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: gaussdb-backend
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-local}
+      - GAUSSDB_HOST=${GAUSSDB_HOST:-192.168.126.101}
+      - GAUSSDB_PORT=${GAUSSDB_PORT:-26000}
+      - GAUSSDB_DB=${GAUSSDB_DB:-postgres}
+      - GAUSSDB_USER=${GAUSSDB_USER:-yu}
+      - GAUSSDB_PASSWORD=${GAUSSDB_PASSWORD:-gauss@666}
+    ports:
+      - "5000:5000"
+    # 如果使用本地虚拟机环境，可以注释掉 depends_on
+    # depends_on:
+    #   - gaussdb
+    # 如果容器无法访问宿主机局域网，可以尝试添加 extra_hosts
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: gaussdb-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # 如果使用本地虚拟机环境，可以注释掉或删除 gaussdb 服务
+  # 如果使用云环境，取消注释下面的配置
+  # gaussdb:
+  #   image: postgres:13
+  #   container_name: gaussdb
+  #   environment:
+  #     POSTGRES_DB: ${GAUSSDB_DB:-clouddb}
+  #     POSTGRES_USER: ${GAUSSDB_USER:-cloud_user}
+  #     POSTGRES_PASSWORD: ${GAUSSDB_PASSWORD:-CloudPassword123!}
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  #     - gaussdb-data:/var/lib/postgresql/data
+  #   networks:
+  #     - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  gaussdb-data:
+
+
+
+
